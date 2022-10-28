@@ -1,27 +1,19 @@
 'reach 0.1';
 
-// create enum for first 5 fingers
-//const [ isHand, ZERO, ONE, TWO, THREE, FOUR, FIVE ] = makeEnum(6);
 
-// create enum for results
 const [ isResult, NO_WINS, A_WINS, B_WINS, DRAW,  ] = makeEnum(4);
 
-// 0 = none, 1 = B wins, 2 = draw , 3 = A wins
-const winner = (handAlice, guessAlice, handBob, guessBob) => {
-  const total = handAlice + handBob;
+const winner = (handAgnes, guessAgnes, handBenny, guessBenny) => {
+  const total = handAgnes + handBenny;
 
-  if ( guessAlice == total && guessBob == total  ) {
-      // draw
+  if ( guessAgnes == total && guessBenny == total  ) {
       return DRAW
-  }  else if ( guessBob == total) {
-      // Bob wins
+  }  else if ( guessBenny == total) {
       return B_WINS
   }
-  else if ( guessAlice == total ) { 
-      // Alice wins
+  else if ( guessAgnes == total ) { 
       return A_WINS
   } else {
-    // else no one wins
       return NO_WINS
   }
  
@@ -40,15 +32,15 @@ assert(winner(5,10,5,10 ) == DRAW);
 assert(winner(3,6,2,4 ) == NO_WINS);
 assert(winner(0,3,1,5 ) == NO_WINS);
 
-forall(UInt, handAlice =>
-  forall(UInt, handBob =>
-    forall(UInt, guessAlice =>
-      forall(UInt, guessBob =>
-    assert(isResult(winner(handAlice, guessAlice, handBob , guessBob)))
+forall(UInt, handAgnes =>
+  forall(UInt, handBenny =>
+    forall(UInt, guessAgnes =>
+      forall(UInt, guessBenny =>
+    assert(isResult(winner(handAgnes, guessAgnes, handBenny , guessBenny)))
 ))));
 
 
-// Setup common functions
+// Here to Setup common functions
 const commonInteract = {
   ...hasRandom,
   reportResult: Fun([UInt], Null),
@@ -58,110 +50,109 @@ const commonInteract = {
   getGuess: Fun([], UInt),
 };
 
-const aliceInterect = {
+const agnesInterect = {
   ...commonInteract,
   wager: UInt, 
   deadline: UInt, 
 }
 
-const bobInteract = {
+const bennyInteract = {
   ...commonInteract,
   acceptWager: Fun([UInt], Null),
 }
 
 
 export const main = Reach.App(() => {
-  const Alice = Participant('Alice',aliceInterect );
-  const Bob = Participant('Bob', bobInteract );
+  const Agnes = Participant('Agnes',agnesInterect );
+  const Benny = Participant('Benny', bennyInteract );
   init();
 
   // Check for timeouts
   const informTimeout = () => {
-    each([Alice, Bob], () => {
+    each([Agnes, Benny], () => {
       interact.informTimeout();
     });
   };
 
-  Alice.only(() => {
+  Agnes.only(() => {
     const wager = declassify(interact.wager);
     const deadline = declassify(interact.deadline);
   });
-  Alice.publish(wager, deadline)
+  Agnes.publish(wager, deadline)
     .pay(wager);
   commit();
 
-  Bob.only(() => {
+  Benny.only(() => {
     interact.acceptWager(wager);
   });
-  Bob.pay(wager)
-    .timeout(relativeTime(deadline), () => closeTo(Alice, informTimeout));
+  Benny.pay(wager)
+    .timeout(relativeTime(deadline), () => closeTo(Agnes, informTimeout));
   
 
   var result = DRAW;
    invariant( balance() == 2 * wager && isResult(result) );
 
-   ///////////////// While DRAW or NO_WINS //////////////////////////////
    while ( result == DRAW || result == NO_WINS ) {
     commit();
 
-  Alice.only(() => {
-    const _handAlice = interact.getHand();
-    const [_commitAlice1, _saltAlice1] = makeCommitment(interact, _handAlice);
-    const commitAlice1 = declassify(_commitAlice1);
+  Agnes.only(() => {
+    const _handAgnes = interact.getHand();
+    const [_commitAgnes1, _saltAgnes1] = makeCommitment(interact, _handAgnes);
+    const commitAgnes1 = declassify(_commitAgnes1);
 
-    const _guessAlice = interact.getGuess();
-    const [_commitAlice2, _saltAlice2] = makeCommitment(interact, _guessAlice);
-    const commitAlice2 = declassify(_commitAlice2);
+    const _guessAgnes = interact.getGuess();
+    const [_commitAgnes2, _saltAgnes2] = makeCommitment(interact, _guessAgnes);
+    const commitAgnes2 = declassify(_commitAgnes2);
 
   })
   
 
-  Alice.publish(commitAlice1, commitAlice2)
-      .timeout(relativeTime(deadline), () => closeTo(Bob, informTimeout));
+  Agnes.publish(commitAgnes1, commitAgnes2)
+      .timeout(relativeTime(deadline), () => closeTo(Benny, informTimeout));
     commit();
 
-  // Bob must NOT know about Batman hand and guess
-  unknowable(Bob, Alice(_handAlice,_guessAlice, _saltAlice1,_saltAlice2 ));
+
+    unknowable(Benny, Agnes(_handAgnes,_guessAgnes, _saltAgnes1,_saltAgnes2 ));
   
-  // Get Bob hand
-  Bob.only(() => {
-    const handBob = declassify(interact.getHand());
-    const guessBob = declassify(interact.getGuess());
+  Benny.only(() => {
+    const handBenny = declassify(interact.getHand());
+    const guessBenny = declassify(interact.getGuess());
   });
 
-  Bob.publish(handBob, guessBob)
-    .timeout(relativeTime(deadline), () => closeTo(Alice, informTimeout));
+  Benny.publish(handBenny, guessBenny)
+    .timeout(relativeTime(deadline), () => closeTo(Agnes, informTimeout));
   commit();
 
-  Alice.only(() => {
-    const saltAlice1 = declassify(_saltAlice1);
-    const handAlice = declassify(_handAlice);
-    const saltAlice2 = declassify(_saltAlice2);
-    const guessAlice = declassify(_guessAlice);
+  Agnes.only(() => {
+    const saltAgnes1 = declassify(_saltAgnes1);
+    const handAgnes = declassify(_handAgnes);
+    const saltAgnes2 = declassify(_saltAgnes2);
+    const guessAgnes = declassify(_guessAgnes);
 
   });
 
-  Alice.publish(saltAlice1,saltAlice2, handAlice, guessAlice)
-    .timeout(relativeTime(deadline), () => closeTo(Bob, informTimeout));
-  checkCommitment(commitAlice1, saltAlice1, handAlice);
-  checkCommitment(commitAlice2, saltAlice2, guessAlice);
+  Agnes.publish(saltAgnes1,saltAgnes2, handAgnes, guessAgnes)
+    .timeout(relativeTime(deadline), () => closeTo(Benny, informTimeout));
+  checkCommitment(commitAgnes1, saltAgnes1, handAgnes);
+  checkCommitment(commitAgnes2, saltAgnes2, guessAgnes);
 
   // Report results to all participants
-  each([Alice, Bob], () => {
-    interact.reportHands(handAlice, guessAlice, handBob, guessBob);
+  each([Agnes, Benny], () => {
+    interact.reportHands(handAgnes, guessAgnes, handBenny, guessBenny);
   });
 
-  result = winner(handAlice, guessAlice, handBob, guessBob);
+  result = winner(handAgnes, guessAgnes, handBenny, guessBenny);
   continue;
 }
-// check to make sure no DRAW or NO_WINS
+
+
 assert(result == A_WINS || result == B_WINS);
 
-each([Alice, Bob], () => {
+each([Agnes, Benny], () => {
   interact.reportResult(result);
 });
 
-transfer(2 * wager).to(result == A_WINS ? Alice : Bob);
+transfer(2 * wager).to(result == A_WINS ? Agnes : Benny);
 commit();
 
 });

@@ -1,27 +1,26 @@
 <template>
   <div id="app">
 
-  <H1>REACH MORRA</H1>
+  <H1 style="color:blue;">REACH MORRA</H1>
 
-    <H3>Choose Your Role:</H3>
-
-    <button @click="alice()" >Alice</button> VS 
-    <button @click="bob()" >Bob</button>
+    <H3 style="color:orange;"> Choose your role:</H3>
+    <button class="buttoncolor" @click="agnes()" >Agnes</button> VS 
+    <button class="buttoncolor" @click="benny()" >Benny</button>
     <BR/>
   
   <HR/>
 
   <div v-if="role==0">
-  <h3>Alice</h3>
+  <h3>Agnes</h3>
 
-    <button @click="createContract()" >Click to Deploy Contract</button><BR/>
+    <button class="buttoncolor2" @click="createContract()" >Click to Deploy Contract</button><BR/>
 
     contract: (Copy below to Buyer and Transport)<BR/> 
     <h4>{{ ctcInfoStr }}</h4><BR /><BR />
   </div>
 
   <div v-else-if="role==1">
-  <h3>Bob</h3>
+  <h3>Benny</h3>
 
   <input v-model="ctcStr" placeholder="paste contract here"> <button @click="attachContract()">Attach Contract</button>
   
@@ -40,11 +39,11 @@
       <BR/>
       <h4>Last result are : </h4>
       <BR/>
-      Alice hand: {{aliceHands}}
-      Alice guess: {{aliceGuess}}
+      Agnes hand: {{agnesHands}}
+      Agnes guess: {{agnesGuess}}
       <BR/>
-      Bob hand: {{bobHands}}
-      Bob guess: {{bobGuess}}
+      Benny hand: {{bennyHands}}
+      Benny guess: {{bennyGuess}}
       <BR/>
   </div>
 
@@ -86,7 +85,7 @@
   bal: {{ bal }} <BR/>
   balAtomic: {{ balAtomic }}<BR/>
 
-  <button @click="updateBalance()">updateBalance</button>
+  <button class="buttoncolor3" @click="updateBalance()">updateBalance</button>
 
   </div>
 </template>
@@ -94,33 +93,23 @@
 <script>
 import * as backend from '../build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
-//const stdlib = loadStdlib(process.env);
 
-// Here is to Run in cmdline with 
-// REACH_CONNECTOR_MODE=ALGO-Live
-// ../reach devnet
+
 const stdlib = loadStdlib("ALGO");
 stdlib.setProviderByName("TestNet")
 
 console.log(`The consensus network is ${stdlib.connector}.`);
 
-//const suStr = stdlib.standardUnit;
-//console.log("Unit is ", suStr)
-//const toAU = (su) => stdlib.parseCurrency(su);
+
 const toSU = (au) => stdlib.formatCurrency(au, 4);
 
-// Defined all interact methods as global for backend calls, 
-// later convert them to Vue methods
-// These object MUST match the contract object in index.rsh
 
-// This MUST match object in index.rsh
 let commonInteract = { };
-let aliceInteract = { };
-let bobInteract = { };
+let agnesInteract = { };
+let bennyInteract = { };
 
-const OUTCOME = [ "NULL","Alice Wins", "Bob Wins" ];
+const OUTCOME = [ "NULL","Agnes Wins", "Benny Wins" ];
 
-// Setup secret seed here, loaded in .env.local
 const secret = process.env.VUE_APP_SECRET1
 const secret2 = process.env.VUE_APP_SECRET2
 
@@ -149,29 +138,26 @@ export default {
       wager: undefined,
       hand: undefined,
       guess: undefined,
-      aliceHands:undefined,
-      aliceGuess:undefined,
-      bobHands:undefined,
-      bobGuess:undefined,
+      agnesHands:undefined,
+      agnesGuess:undefined,
+      bennyHands:undefined,
+      bennyGuess:undefined,
       resultString: undefined,
       acceptWager: undefined,
     };
   },
    methods: {
 
-      // Create a Vue methods for every commonInteract methods
       commonFunctions() {
 
         commonInteract = {
             ...stdlib.hasRandom,
             reportResult: async (result) => { this.reportResult(result); },
-            reportHands: (alice, aliceGuess, bob, bobGuess) => { this.reportHands(alice, aliceGuess, bob, bobGuess)},
+            reportHands: (agnes, agnesGuess, benny, bennyGuess) => { this.reportHands(agnes, agnesGuess, benny, bennyGuess)},
             informTimeout: () => { this.informTimeout()},
             getHand: async () => {
                   console.log("*** getHand called from backend");
-                  // this will use v-if to display the input
                   this.getHandState = true
-                  // waitUtil hand is not undefined
                   await this.waitUntil(() => this.hand !== undefined );
                   console.log("You played ", this.hand + " finger(s)");
                   const hand = stdlib.parseCurrency(this.hand);
@@ -181,9 +167,8 @@ export default {
                 },
             getGuess: async () => {
                   console.log("*** getGuess called from backend");
-                  // this will use v-if to display the input
                   this.getGuessState = true
-                  // waitUtil hand is not undefined
+
                   await this.waitUntil(() => this.guess !== undefined );
                   console.log("You guess total of ", this.guess);
                   const guess = stdlib.parseCurrency(this.guess);
@@ -195,24 +180,21 @@ export default {
       },
 
       async reportResult(result) {
-        // Return is 0x01 - Batman or 0x02 - Bob
-        // How to convert to number ??
+     
         console.log('*** reportResult ', result);
         this.resultString = OUTCOME[result];
         console.log('this.result ', this.resultString);
-        // change state to true and display to web
         this.displayResultState = true;
         await this.updateBalance();
       },
 
-      reportHands(alice, aliceGuess, bob, bobGuess) {
-        console.log('*** The hands are ' + alice, aliceGuess, bob, bobGuess );
-        this.aliceHands = toSU(alice);
-        this.aliceGuess = toSU(aliceGuess);
-        this.bobHands = toSU(bob);
-        this.bobGuess = toSU(bobGuess);
+      reportHands(agnes, agnesGuess, benny, bennyGuess) {
+        console.log('*** The hands are ' + agnes, agnesGuess, benny, bennyGuess );
+        this.agnesHands = toSU(agnes);
+        this.agnesGuess = toSU(agnesGuess);
+        this.bennyHands = toSU(benny);
+        this.bennyGuess = toSU(bennyGuess);
 
-        // change state to true and display to web
         this.displayHandsState = true;
       },
 
@@ -227,16 +209,11 @@ export default {
       },
 
     async createContract() {
-          // create the contract here
-          // https://docs.reach.sh/frontend/#ref-frontends-js-ctc
-          console.log("Creating contract...")
-          this.ctc = await this.acc.contract(backend);
+        console.log("Creating contract...")
+        this.ctc = await this.acc.contract(backend);
+          this.ctc.p.Agnes(agnesInteract);
 
-          // The object must match backend in index.rsh
-          this.ctc.p.Alice(aliceInteract);
-
-          // This will be ran after the contract is deployed
-          // the JSON contract will be displayed so others can attach this contract
+   
           const info = await this.ctc.getInfo();
           this.ctcInfoStr = JSON.stringify(info);
           console.log("this.ctcInfoStr: ", this.ctcInfoStr);
@@ -245,20 +222,18 @@ export default {
           await this.updateBalance();
     },
 
-    async alice() {
+    async agnes() {
       this.commonFunctions();
-      aliceInteract = {
+      agnesInteract = {
             ...commonInteract,
             wager: stdlib.parseCurrency(1),
             deadline: stdlib.parseCurrency(10),
         }
 
-      console.log("Alice: ", aliceInteract);
+      console.log("Agnes: ", agnesInteract);
       try {
           this.role = 0;
-           // Change from devnet to testnet
-          //this.acc = await stdlib.newTestAccount(stdlib.parseCurrency(1000));
-          // Get secret keywords from .env.local
+ 
           this.acc = await stdlib.newAccountFromMnemonic(secret);
 
           this.addr = stdlib.formatAddress(this.acc.getAddress());
@@ -271,7 +246,6 @@ export default {
       }
     },
     
-    //////////////////////////// Buyer
 
     async yesnoWager(res) {
         console.log("yesnoWager: ", res)
@@ -281,34 +255,29 @@ export default {
    async attachContract() {
             this.ctc = await this.acc.contract(backend, JSON.parse(this.ctcStr));     
             console.log("Contract attached: ",this.ctcStr)
-            await this.ctc.p.Bob(bobInteract);
+            await this.ctc.p.Benny(bennyInteract);
             await this.updateBalance();
     },
 
-    async bob() {
+    async benny() {
       this.commonFunctions();
-      bobInteract = {
+      bennyInteract = {
         ...commonInteract,
-         //acceptWager: Fun([UInt], Null),
           acceptWager: async (wager) => {
           console.log("*** acceptWager", wager);
 
           this.wager =  toSU(wager),
           this.waitUntil( ()=> this.acceptWager == true)
-          // Exit if false
           if ( this.acceptWager == false) {
               process.exit(0);
           }
         }
       }
-      console.log("Bob: ", bobInteract);
+      console.log("Robin: ", bennyInteract);
 
       try {
-        // Set role, create account
           this.role = 1;
-          // Change from devnet to testnet
-          //this.acc = await stdlib.newTestAccount(stdlib.parseCurrency(1000));
-          // Get secret keywords from .env.local
+  
           this.acc = await stdlib.newAccountFromMnemonic(secret2);
 
           this.addr = stdlib.formatAddress(this.acc.getAddress());
@@ -321,7 +290,6 @@ export default {
       }
     },  
     
-    // Common function for all Vue Rech
     waitUntil (condition) {
     return new Promise((resolve) => {
         let interval = setInterval(() => {
@@ -335,7 +303,6 @@ export default {
       })
     },
 
-    // Call this after every action to get current balance
     async updateBalance() {
       try {
         this.balAtomic = await stdlib.balanceOf(this.acc);
@@ -367,6 +334,20 @@ export default {
 .content {
   width: 1024px;
 }
+
+.buttoncolor{
+  background-color: blanchedalmond;
+}
+
+.buttoncolor2{
+  background-color:lightsalmon;
+}
+
+.buttoncolor3{
+  background-color:royalblue;
+}
+
+
 .navigation-buttons {
   display: flex;
   justify-content: space-between;
