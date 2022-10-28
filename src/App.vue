@@ -1,7 +1,7 @@
 <template>
   <div id="app">
 
-  <H1 style="color:blue;">REACH MORRA</H1>
+  <H1 style="color:blue;">TrackYourLove</H1>
 
     <H3 style="color:orange;"> Choose your role:</H3>
     <button class="buttoncolor" @click="agnes()" >Agnes</button> VS 
@@ -103,12 +103,12 @@ console.log(`The consensus network is ${stdlib.connector}.`);
 
 const toSU = (au) => stdlib.formatCurrency(au, 4);
 
-
+//function same
+let DonorInteract = { };
+let OwnerInteract = { };
 let commonInteract = { };
-let agnesInteract = { };
-let bennyInteract = { };
+let RecipientInteract = { };
 
-const OUTCOME = [ "NULL","Agnes Wins", "Benny Wins" ];
 
 const secret = process.env.VUE_APP_SECRET1
 const secret2 = process.env.VUE_APP_SECRET2
@@ -144,6 +144,8 @@ export default {
       bennyGuess:undefined,
       resultString: undefined,
       acceptWager: undefined,
+      donationMsg: undefined,
+      paymentMsg: undefined,
     };
   },
    methods: {
@@ -152,40 +154,24 @@ export default {
 
         commonInteract = {
             ...stdlib.hasRandom,
-            reportResult: async (result) => { this.reportResult(result); },
-            reportHands: (agnes, agnesGuess, benny, bennyGuess) => { this.reportHands(agnes, agnesGuess, benny, bennyGuess)},
-            informTimeout: () => { this.informTimeout()},
-            getHand: async () => {
-                  console.log("*** getHand called from backend");
-                  this.getHandState = true
-                  await this.waitUntil(() => this.hand !== undefined );
-                  console.log("You played ", this.hand + " finger(s)");
-                  const hand = stdlib.parseCurrency(this.hand);
-                  this.hand = undefined;
-                  this.getHandState = false
-                  return hand;
-                },
-            getGuess: async () => {
-                  console.log("*** getGuess called from backend");
-                  this.getGuessState = true
-
-                  await this.waitUntil(() => this.guess !== undefined );
-                  console.log("You guess total of ", this.guess);
-                  const guess = stdlib.parseCurrency(this.guess);
-                  this.guess = undefined;
-                  this.getGuessState = false
-                  return guess;
-                },
+            reportDonation: async (Donationtoken1) => { this.reportDonation(Donationtoken1); },
+            reportPayment: async (Requesttoken) => { this.reportPayment(Requesttoken); },
+           
+          
           }
       },
 
-      async reportResult(result) {
-     
-        console.log('*** reportResult ', result);
-        this.resultString = OUTCOME[result];
-        console.log('this.result ', this.resultString);
-        this.displayResultState = true;
-        await this.updateBalance();
+
+      async reportDonation(token) {
+        console.log('reportDonation', token);
+         this.donationMsg = 'The donor have made payment of ' + toSU(token) + 
+                            ' to the contract at ' + token;
+      },
+
+      async reportPayment(token) {
+        console.log('reportPayment', token);
+         this.paymentMsg = 'The donor have made payment of ' + toSU(token) + 
+                            ' to the contract at ' + token;
       },
 
       reportHands(agnes, agnesGuess, benny, bennyGuess) {
