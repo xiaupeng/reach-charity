@@ -69,7 +69,7 @@ export const main = Reach.App(() => {
 
   Owner.publish(approvetoken1)
 
-  if (!approvetoken1 )  {
+  if (!approvetoken1 && Donationtoken1+Donationtoken2 < Requesttoken1 )  {
     commit()
   }else {
         transfer(Requesttoken1).to(Recipient1);
@@ -78,7 +78,7 @@ export const main = Reach.App(() => {
    }
   
 
-   Recipient2.only(() => {
+Recipient2.only(() => {
     const Requesttoken2 = declassify(interact.requestDonation());
 })
 
@@ -91,7 +91,7 @@ Owner.only(() => {
 
 Owner.publish(approvetoken2)
 
-if (!approvetoken2 )  {
+if (!approvetoken2 && Donationtoken2+Donationtoken2 < Requesttoken2  )  {
   commit()
 }else {
       transfer(Requesttoken2).to(Recipient2);
